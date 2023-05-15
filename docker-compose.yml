@@ -1,0 +1,22 @@
+version: "2"
+services:
+  vote:
+    build:
+      context: .
+      dockerfile: vote/Dockerfile
+    restart: always
+    volumes:
+      - ./vote:/go/src/github.com/maxsimmonds1337/simple-go-app/vote
+    container_name: vote
+    ports:
+      - 8800:8081
+    environment:
+      - DB_HOSTNAME=localhost
+      - DB_PORT=50500
+      - DB_DATABASE=hotdogs
+      - DB_USERNAME=db2inst1
+      - DB_PASSWORD=hotdog
+      - IBM_DB_HOME=/go/pkg/mod/github.com/ibmdb/clidriver
+      - CGO_CFLAGS=-I${IBM_DB_HOME}/include
+      - CGO_LDFLAGS=-L${IBM_DB_HOME}/lib
+      - DYLD_LIBRARY_PATH=${IBM_DB_HOME}/lib

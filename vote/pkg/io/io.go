@@ -6,6 +6,7 @@ import "encoding/json"
 type Vote struct {
 	Id      int    `json:"id"`
 	Nominee string `json:"nominee"`
+	App     string `json:"app"`
 }
 
 // a method for unmarshalling and returning the vote as a string (TODO: Might not need)
