@@ -4,6 +4,7 @@ go 1.20
 
 require (
 	github.com/go-kit/kit v0.12.0
+	github.com/go-sql-driver/mysql v1.7.1
 	github.com/ibmdb/go_ibm_db v0.4.3
 	github.com/lightstep/lightstep-tracer-go v0.26.0
 	github.com/oklog/oklog v0.3.2
