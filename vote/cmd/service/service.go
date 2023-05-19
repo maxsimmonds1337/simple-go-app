@@ -4,6 +4,16 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"net"
+	http2 "net/http"
+	"os"
+	"os/signal"
+	endpoint "simple-go-app/vote/pkg/endpoint"
+	http1 "simple-go-app/vote/pkg/http"
+	"simple-go-app/vote/pkg/logger"
+	service "simple-go-app/vote/pkg/service"
+	"syscall"
+
 	endpoint1 "github.com/go-kit/kit/endpoint"
 	log "github.com/go-kit/kit/log"
 	prometheus "github.com/go-kit/kit/metrics/prometheus"
@@ -15,20 +25,11 @@ import (
 	http "github.com/openzipkin/zipkin-go/reporter/http"
 	prometheus1 "github.com/prometheus/client_golang/prometheus"
 	promhttp "github.com/prometheus/client_golang/prometheus/promhttp"
-	"net"
-	http2 "net/http"
-	"os"
-	"os/signal"
-	endpoint "simple-go-app/vote/pkg/endpoint"
-	http1 "simple-go-app/vote/pkg/http"
-	service "simple-go-app/vote/pkg/service"
 	appdash "sourcegraph.com/sourcegraph/appdash"
 	opentracing "sourcegraph.com/sourcegraph/appdash/opentracing"
-	"syscall"
 )
 
 var tracer opentracinggo.Tracer
-var logger log.Logger
 
 // Define our flags. Your service probably won't need to bind listeners for
 // all* supported transports, but we do it here for demonstration purposes.
@@ -47,62 +48,57 @@ var appdashAddr = fs.String("appdash-addr", "", "Enable Appdash tracing via an A
 func Run() {
 	fs.Parse(os.Args[1:])
 
-	// Create a single logger, which we'll use and give to other components.
-	logger = log.NewLogfmtLogger(os.Stderr)
-	logger = log.With(logger, "ts", log.DefaultTimestampUTC)
-	logger = log.With(logger, "caller", log.DefaultCaller)
-
 	//  Determine which tracer to use. We'll pass the tracer to all the
 	// components that use it, as a dependency
 	if *zipkinURL != "" {
-		logger.Log("tracer", "Zipkin", "URL", *zipkinURL)
+		logger.Logger.Log("tracer", "Zipkin", "URL", *zipkinURL)
 		reporter := http.NewReporter(*zipkinURL)
 		defer reporter.Close()
 		endpoint, err := zipkingo.NewEndpoint("vote", "localhost:80")
 		if err != nil {
-			logger.Log("err", err)
+			logger.Logger.Log("err", err)
 			os.Exit(1)
 		}
 		localEndpoint := zipkingo.WithLocalEndpoint(endpoint)
 		nativeTracer, err := zipkingo.NewTracer(reporter, localEndpoint)
 		if err != nil {
-			logger.Log("err", err)
+			logger.Logger.Log("err", err)
 			os.Exit(1)
 		}
 		tracer = zipkingoopentracing.Wrap(nativeTracer)
 	} else if *lightstepToken != "" {
-		logger.Log("tracer", "LightStep")
+		logger.Logger.Log("tracer", "LightStep")
 		tracer = lightsteptracergo.NewTracer(lightsteptracergo.Options{AccessToken: *lightstepToken})
 		defer lightsteptracergo.Flush(context.Background(), tracer)
 	} else if *appdashAddr != "" {
-		logger.Log("tracer", "Appdash", "addr", *appdashAddr)
+		logger.Logger.Log("tracer", "Appdash", "addr", *appdashAddr)
 		collector := appdash.NewRemoteCollector(*appdashAddr)
 		tracer = opentracing.NewTracer(collector)
 		defer collector.Close()
 	} else {
-		logger.Log("tracer", "none")
+		logger.Logger.Log("tracer", "none")
 		tracer = opentracinggo.GlobalTracer()
 	}
 
-	svc := service.New(getServiceMiddleware(logger))
-	eps := endpoint.New(svc, getEndpointMiddleware(logger))
+	svc := service.New(getServiceMiddleware(logger.Logger))
+	eps := endpoint.New(svc, getEndpointMiddleware(logger.Logger))
 	g := createService(eps)
 	initMetricsEndpoint(g)
 	initCancelInterrupt(g)
-	logger.Log("exit", g.Run())
+	logger.Logger.Log("exit", g.Run())
 
 }
 func initHttpHandler(endpoints endpoint.Endpoints, g *group.Group) {
-	options := defaultHttpOptions(logger, tracer)
+	options := defaultHttpOptions(logger.Logger, tracer)
 	// Add your http options here
 
 	httpHandler := http1.NewHTTPHandler(endpoints, options)
 	httpListener, err := net.Listen("tcp", *httpAddr)
 	if err != nil {
-		logger.Log("transport", "HTTP", "during", "Listen", "err", err)
+		logger.Logger.Log("transport", "HTTP", "during", "Listen", "err", err)
 	}
 	g.Add(func() error {
-		logger.Log("transport", "HTTP", "addr", *httpAddr)
+		logger.Logger.Log("transport", "HTTP", "addr", *httpAddr)
 		return http2.Serve(httpListener, httpHandler)
 	}, func(error) {
 		httpListener.Close()
@@ -133,10 +129,10 @@ func initMetricsEndpoint(g *group.Group) {
 	http2.DefaultServeMux.Handle("/metrics", promhttp.Handler())
 	debugListener, err := net.Listen("tcp", *debugAddr)
 	if err != nil {
-		logger.Log("transport", "debug/HTTP", "during", "Listen", "err", err)
+		logger.Logger.Log("transport", "debug/HTTP", "during", "Listen", "err", err)
 	}
 	g.Add(func() error {
-		logger.Log("transport", "debug/HTTP", "addr", *debugAddr)
+		logger.Logger.Log("transport", "debug/HTTP", "addr", *debugAddr)
 		return http2.Serve(debugListener, http2.DefaultServeMux)
 	}, func(error) {
 		debugListener.Close()

@@ -2,8 +2,11 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"simple-go-app/vote/pkg/db"
 	"simple-go-app/vote/pkg/io"
+
+	"simple-go-app/vote/pkg/logger"
 
 	_ "github.com/ibmdb/go_ibm_db"
 )
@@ -47,6 +50,8 @@ func (b *basicVoteService) Add(ctx context.Context, vote io.Vote) (v io.Vote, er
 }
 
 func (b *basicVoteService) Get(ctx context.Context) (t []io.Vote, error error) {
+	fmt.Print("getting stuff")
+	logger.Logger.Log("err", error)
 	session, err := db.GetDB2Connection()
 	if err != nil {
 		return t, err

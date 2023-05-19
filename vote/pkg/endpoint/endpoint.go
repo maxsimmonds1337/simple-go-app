@@ -2,9 +2,12 @@ package endpoint
 
 import (
 	"context"
-	endpoint "github.com/go-kit/kit/endpoint"
+	"fmt"
 	io "simple-go-app/vote/pkg/io"
+	"simple-go-app/vote/pkg/logger"
 	service "simple-go-app/vote/pkg/service"
+
+	endpoint "github.com/go-kit/kit/endpoint"
 )
 
 // AddRequest collects the request parameters for the Add method.
@@ -46,6 +49,8 @@ type GetResponse struct {
 
 // MakeGetEndpoint returns an endpoint that invokes Get on the service.
 func MakeGetEndpoint(s service.VoteService) endpoint.Endpoint {
+	fmt.Print("calling MakeGetEndpoint")
+	logger.Logger.Log("msg", "calling makegetendpoint")
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		v, error := s.Get(ctx)
 		return GetResponse{
