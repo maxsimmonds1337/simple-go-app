@@ -4,19 +4,23 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	http1 "github.com/go-kit/kit/transport/http"
 	"net/http"
 	endpoint "simple-go-app/vote/pkg/endpoint"
+	"simple-go-app/vote/pkg/logger"
+
+	http1 "github.com/go-kit/kit/transport/http"
 )
 
 // makeAddHandler creates the handler logic
 func makeAddHandler(m *http.ServeMux, endpoints endpoint.Endpoints, options []http1.ServerOption) {
+	logger.Logger.Log("msg", "Making add handler")
 	m.Handle("/add", http1.NewServer(endpoints.AddEndpoint, decodeAddRequest, encodeAddResponse, options...))
 }
 
 // decodeAddRequest is a transport/http.DecodeRequestFunc that decodes a
 // JSON-encoded request from the HTTP request body.
 func decodeAddRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	logger.Logger.Log("msg", "decoding http body request")
 	req := endpoint.AddRequest{}
 	err := json.NewDecoder(r.Body).Decode(&req)
 	return req, err
@@ -36,15 +40,18 @@ func encodeAddResponse(ctx context.Context, w http.ResponseWriter, response inte
 
 // makeGetHandler creates the handler logic
 func makeGetHandler(m *http.ServeMux, endpoints endpoint.Endpoints, options []http1.ServerOption) {
+	logger.Logger.Log("msg", "Making get handler")
 	m.Handle("/get", http1.NewServer(endpoints.GetEndpoint, decodeGetRequest, encodeGetResponse, options...))
 }
 
 // decodeGetRequest is a transport/http.DecodeRequestFunc that decodes a
 // JSON-encoded request from the HTTP request body.
 func decodeGetRequest(_ context.Context, r *http.Request) (interface{}, error) {
+	logger.Logger.Log("msg", "decoding http body request")
 	req := endpoint.GetRequest{}
-	err := json.NewDecoder(r.Body).Decode(&req)
-	return req, err
+	// logger.Logger.Log("msg: body is ", r.Body)
+	// err := json.NewDecoder(r.Body).Decode(&req) // there is no get body
+	return req, nil
 }
 
 // encodeGetResponse is a transport/http.EncodeResponseFunc that encodes

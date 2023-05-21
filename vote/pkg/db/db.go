@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"simple-go-app/vote/pkg/logger"
 
 	_ "github.com/ibmdb/go_ibm_db" // Import the DB2 driver
 )
@@ -24,11 +25,13 @@ var db2Conn *sql.DB
 // If there is an active connection, it will return the existing connection.
 func GetDB2Connection() (*sql.DB, error) {
 	if db2Conn == nil {
+		logger.Logger.Log("msg", "attempting to open db2 conn...")
 		var err error
 		db2Conn, err = sql.Open("go_ibm_db", db2ConnStr)
 		if err != nil {
 			return nil, err
 		}
+		logger.Logger.Log("msg", "got a valid conn")
 	}
 	return db2Conn, nil
 }

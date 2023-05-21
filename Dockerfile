@@ -1,7 +1,7 @@
 FROM golang:latest
 
 # Set environment variables
-ENV DB_HOSTNAME=localhost
+ENV DB_HOSTNAME=db2_hd
 ENV DB_PORT=50500
 ENV DB_DATABASE=hotdogs
 ENV DB_USERNAME=db2inst1
