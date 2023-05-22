@@ -81,3 +81,13 @@ ETCD_PASSWORD=
 *   1 record(s) selected.
 
 
+* Had to do this to get db2 connection working to dbvisulaiser
+* db2 "update dbm cfg using svcename 50500"
+* db2stop force
+* db2start
+
+docker network create my-BUNderful-network
+
+docker build --platform linux/amd64  -t simple-go-app .
+docker run --network my-Bunderful-network -p 8081:8081 -it simple-go-app
+
