@@ -26,9 +26,9 @@ func (b *basicVoteService) Add(ctx context.Context, vote io.Vote) (v io.Vote, er
 	if err != nil {
 		return v, err
 	}
-	defer session.Close()
+	//defer session.Close()
 
-	stmt, err := session.Prepare("INSERT INTO votes (Nominee, app) VALUES (?, ?)")
+	stmt, err := session.Prepare("INSERT INTO votes (nominee, app) VALUES (?, ?)")
 	if err != nil {
 		return v, err
 	}
@@ -54,7 +54,7 @@ func (b *basicVoteService) Get(ctx context.Context) (t []io.Vote, error error) {
 	if err != nil {
 		return t, err
 	}
-	defer session.Close()
+	//defer session.Close()
 
 	rows, err := session.Query("SELECT id, Nominee, app FROM votes")
 	if err != nil {
