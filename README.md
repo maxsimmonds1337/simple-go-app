@@ -91,3 +91,13 @@ docker network create my-BUNderful-network
 docker build --platform linux/amd64  -t simple-go-app .
 docker run --network my-Bunderful-network -p 8081:8081 -it simple-go-app
 
+curl -X POST -H "Content-Type: application/json" -d '{
+  "vote": {
+    "id": 1,
+    "nominee": "John Doe",
+    "app": "Awesome App"
+  }
+}' http://localhost:8080/add
+
+
+curl http://localhost:8081/get
